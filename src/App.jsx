@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react'
 
-const GITHUB_TOKEN = "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"
-const REPO_OWNER = "TeflonFalcon"
-const REPO_NAME = "lspr-shell"
-const WORKFLOW_FILE = import.meta.env.VITE_WORKFLOW_FILE || 'restart.yml'
+const REPO_OWNER = 'TeflonFalcon'
+const REPO_NAME = 'lspr-shell'
+const WORKFLOW_FILE = 'restart.yml'
+const TOKEN_KEY = 'gh_token'
 
-async function triggerWorkflow() {
+const SERVER_ID = '188.225.74.96:22005'
+
+async function triggerWorkflow(token) {
   const res = await fetch(
     `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/${WORKFLOW_FILE}/dispatches`,
     {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        Authorization: `Bearer ${token}`,
         Accept: 'application/vnd.github+json',
         'Content-Type': 'application/json',
       },
@@ -24,8 +26,6 @@ async function triggerWorkflow() {
   }
 }
 
-const SERVER_ID = '188.225.74.96:22005'
-
 async function fetchServerInfo() {
   const res = await fetch('https://cdn.rage.mp/master/v2/')
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -35,8 +35,38 @@ async function fetchServerInfo() {
   return server
 }
 
+function TokenSetup({ onSave }) {
+  const [input, setInput] = useState('')
+
+  function handleSave() {
+    const t = input.trim()
+    if (!t) return
+    localStorage.setItem(TOKEN_KEY, t)
+    onSave(t)
+  }
+
+  return (
+    <div style={styles.card}>
+      <h1 style={styles.title}>Los Santos Project</h1>
+      <p style={styles.muted}>Введи GitHub токен</p>
+      <input
+        style={styles.input}
+        type="password"
+        placeholder="github_pat_..."
+        value={input}
+        onChange={e => setInput(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && handleSave()}
+      />
+      <button style={styles.button} onClick={handleSave}>
+        Сохранить
+      </button>
+    </div>
+  )
+}
+
 export default function App() {
-  const [restartStatus, setRestartStatus] = useState(null) // null | 'loading' | 'ok' | 'error'
+  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) || '')
+  const [restartStatus, setRestartStatus] = useState(null)
   const [restartError, setRestartError] = useState('')
   const [server, setServer] = useState(null)
   const [serverError, setServerError] = useState('')
@@ -51,12 +81,20 @@ export default function App() {
     setRestartStatus('loading')
     setRestartError('')
     try {
-      await triggerWorkflow()
+      await triggerWorkflow(token)
       setRestartStatus('ok')
     } catch (e) {
       setRestartError(e.message)
       setRestartStatus('error')
     }
+  }
+
+  if (!token) {
+    return (
+      <div style={styles.page}>
+        <TokenSetup onSave={setToken} />
+      </div>
+    )
   }
 
   return (
@@ -96,6 +134,10 @@ export default function App() {
         {restartStatus === 'error' && (
           <p style={styles.errorText}>Ошибка: {restartError}</p>
         )}
+
+        <button style={styles.resetBtn} onClick={() => { localStorage.removeItem(TOKEN_KEY); setToken('') }}>
+          Сменить токен
+        </button>
       </div>
     </div>
   )
@@ -152,6 +194,17 @@ const styles = {
     margin: 0,
     fontSize: '14px',
   },
+  input: {
+    background: '#0d1117',
+    border: '1px solid #30363d',
+    borderRadius: '6px',
+    color: '#e6edf3',
+    fontSize: '14px',
+    padding: '8px 12px',
+    width: '100%',
+    outline: 'none',
+    boxSizing: 'border-box',
+  },
   button: {
     background: '#238636',
     color: '#ffffff',
@@ -161,12 +214,19 @@ const styles = {
     fontSize: '16px',
     fontWeight: 600,
     cursor: 'pointer',
-    transition: 'background 0.2s',
     width: '100%',
   },
   buttonDisabled: {
     background: '#388bfd',
     cursor: 'not-allowed',
+  },
+  resetBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#8b949e',
+    fontSize: '12px',
+    cursor: 'pointer',
+    padding: 0,
   },
   success: {
     color: '#3fb950',

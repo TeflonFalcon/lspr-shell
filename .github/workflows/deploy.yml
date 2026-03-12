@@ -33,7 +33,6 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
           VITE_REPO_OWNER: ${{ secrets.REPO_OWNER }}
           VITE_REPO_NAME: ${{ secrets.REPO_NAME }}
           VITE_WORKFLOW_FILE: restart.yml
