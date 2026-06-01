@@ -14,4 +14,4 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           script: |
-            service ragemp-server restart
+            systemctl restart fivem
