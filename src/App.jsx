@@ -5,8 +5,6 @@ const REPO_NAME = 'lspr-shell'
 const WORKFLOW_FILE = 'restart.yml'
 const TOKEN_KEY = 'gh_token'
 
-const SERVER_ID = '188.225.74.96:22005'
-
 async function triggerWorkflow(token) {
   const res = await fetch(
     `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/${WORKFLOW_FILE}/dispatches`,
@@ -27,12 +25,10 @@ async function triggerWorkflow(token) {
 }
 
 async function fetchServerInfo() {
-  const res = await fetch('https://cdn.rage.mp/master/v2/')
+  const res = await fetch('https://frontend.cfx-services.net/api/servers/single/xlzd45m')
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const data = await res.json()
-  const server = data.find(s => s.id === SERVER_ID)
-  if (!server) throw new Error('Сервер не найден')
-  return server
+  return data.Data
 }
 
 function TokenSetup({ onSave }) {
@@ -100,14 +96,14 @@ export default function App() {
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Los Santos Project</h1>
+        <h1 style={styles.title}>{server?.hostname ?? 'Unknow'}</h1>
 
         {server ? (
           <div style={styles.info}>
             <div style={styles.infoRow}>
               <span style={styles.label}>Онлайн</span>
               <span style={styles.value}>
-                {server.players?.amount ?? 0} / {server.players?.max ?? '?'}
+                {server.clients ?? 0} / {server.svMaxclients ?? '?'}
               </span>
             </div>
           </div>
